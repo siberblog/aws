@@ -10,7 +10,9 @@ At the end of the this hands-on training, students will be able to;
 
 - create and configure Auto Scaling Group with Launch Configuration.
 
+- add policy to Auto Scaling Group.
 
+- add Cloudwatch alarm.
 
 ## Outline
 
@@ -23,6 +25,8 @@ At the end of the this hands-on training, students will be able to;
 - Part 4 - Create Launch Configuration
 
 - Part 5 - Create Auto Scaling Group
+
+- Part 6 - Create Auto Scaling Policy
 
 ![Load Balance and auto scaling](./LB_andautuscl.png)
 
@@ -167,7 +171,7 @@ Successfully created load balancer!
 
 ## Part 4 - Create Launch Configuration
 
-- Select `Launch Configurations` from the left-hand AUTO SCALING MENU  and then click `Create Launch Configuration` to start.
+- Select `Launch Configurations` from the left-hand menu and then click `Create Launch Configuration` to start.
 
 - We'll determine what we need to choose from disk size, IAM role, key pair to AMI type. We will do everything just like creating a new virtual machine.
 
@@ -354,3 +358,135 @@ Step 3: Observe that Autoscaling keeps the target group in initial size.
 - Show the status of the stopped instance and refresh it. It probably takes a while to create a new instance by Auto Scaling.
 
 - Go to `Auto Scaling Groups` --> click `First-AS-Group` --> `Activity` and show the changes in the `Activity` history.
+
+## Part 6 - Create Auto Scaling Policy
+
+- Go to `Auto Scaling Groups` --> click `First-AS-Group` --> `Automatic Scaling` --> `Add Policy`
+
+- Explain the Policy Types
+
+Step 1: Create Add-Policy;
+
+- Select `Simple Scaling` as Policy Type
+
+```text
+Scaling Policy Name : First Scaling Policy-Add
+```
+
+- Click Create a CloudWatch Alarm
+
+- Select Metric ---> `EC2` --> By Auto Scaling Group --> `First-AS-Group` and CPUUtilization
+
+- Metric --> Period: 1 minute
+
+- Conditions -->
+
+```text
+Threshold Type "Static"
+
+Select Greater
+
+Enter 60 as threshold value
+```
+
+- Click `Next`
+
+- Click `Remove` tab at the top of the page and do not set any Notification, Autoscaling and EC2 Action
+
+- Click `Next`
+
+- Add name and description
+
+```text
+Alarm name                      : Auto Scaling-Add
+Alarm description - optional    : Auto Scaling-Add
+```
+
+- Click `Next`, Review and Create alarm
+
+- Click `Create a CloudWatch alarm`
+
+- Go back to Autoscaling page and refresh the cloudwatch alarm
+
+- Select `Auto Scaling-Add` as Cloudwatch Alarm
+
+- Take the Action :
+
+```text
+Add --- 1 ---- Capacity Unit
+An Then wait   : 200
+```
+
+- Click Create
+
+Step 2: Create `Remove-Policy`;
+
+- Click `Add Policy`
+
+- Select Simple Scaling as Policy Type
+
+```text
+Scaling Policy Name : First Scaling Policy-Remove
+```
+
+- Click `Create a CloudWatch alarm`
+
+- Select Metric ---> `EC2` --> By Auto Scaling Group --> `First-AS-Group` and CPUUtilization
+
+- Metric --> Period: 1 minute
+
+- Conditions -->
+
+```text
+Threshold Type "Static"
+
+Select Lower
+
+Enter 30 as threshold value
+```
+
+- Click `Next`
+
+- Add name and description
+
+```text
+Alarm name                      : Auto Scaling-Remove
+Alarm description - optional    : Auto Scaling-Remove
+```
+
+- Click `Next`, Review and Create Alarm
+
+- Go back to Autoscaling page and refresh the Cloudwatch Alarm
+
+- Select `Auto Scaling-Remove` as Cloudwatch Alarm
+
+- Take the Action :
+
+```text
+Remove --- 1 ---- Capacity Unit
+An Then wait   : 200
+```
+
+Step 3: Testing
+
+- Go to Instance Menu
+
+- Select one of the Auto Scaling Instance and connect with SSH
+
+- Upload `stress tool`
+
+```bash
+sudo amazon-linux-extras install epel -y
+sudo yum install -y stress
+stress --cpu 80 --timeout 20000   #(optionally using 3000 for timeout)
+```
+
+- Click the instance's Monitoring Tab and show the effect of `stress tool` on CPU Utilization
+
+- Show newly created instance based on `add-policy`
+
+- Go to instance terminal and stop `stress tool` with `CTRL-C`
+
+- Show the removed instance after `stress tool` stops based on `remove-policy`
+
+- Delete Auto-scaling group and Load Balancer
